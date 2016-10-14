@@ -1,0 +1,7 @@
+<resources>
+    <string name="app_name">Wearable</string>
+    <string name="hello_world">Hello World!</string>
+    <string name="digital_am">AM</string>
+    <string name="digital_pm">PM</string>
+    <string name="weather_msg_path">/message</string>
+</resources>

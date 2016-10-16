@@ -601,22 +601,6 @@ public class DigitalWatchFaceService extends CanvasWatchFaceService {
             return isVisible() && !isInAmbientMode();
         }
 
-        private void updateConfigDataItemAndUiOnStartup() {
-            DigitalWatchFaceUtil.fetchConfigDataMap(mGoogleApiClient,
-                    new DigitalWatchFaceUtil.FetchConfigDataMapCallback() {
-                        @Override
-                        public void onConfigDataMapFetched(DataMap startupConfig) {
-                            // If the DataItem hasn't been created yet or some keys are missing,
-                            // use the default values.
-                            setDefaultValuesForMissingConfigKeys(startupConfig);
-                            DigitalWatchFaceUtil.putConfigDataItem(mGoogleApiClient, startupConfig);
-
-                            updateUiForConfigDataMap(startupConfig);
-                        }
-                    }
-            );
-        }
-
         private void setDefaultValuesForMissingConfigKeys(DataMap config) {
             addIntKeyIfMissing(config, DigitalWatchFaceUtil.KEY_BACKGROUND_COLOR,
                     DigitalWatchFaceUtil.COLOR_VALUE_DEFAULT_AND_AMBIENT_BACKGROUND);
@@ -634,71 +618,6 @@ public class DigitalWatchFaceService extends CanvasWatchFaceService {
             }
         }
 
-        // @Override // DataApi.DataListener
-        public void onDataChanged(DataEventBuffer dataEvents) {
-            for (DataEvent dataEvent : dataEvents) {
-                if (dataEvent.getType() != DataEvent.TYPE_CHANGED) {
-                    continue;
-                }
-
-                DataItem dataItem = dataEvent.getDataItem();
-                if (!dataItem.getUri().getPath().equals(
-                        DigitalWatchFaceUtil.PATH_WITH_FEATURE)) {
-                    continue;
-                }
-
-                DataMapItem dataMapItem = DataMapItem.fromDataItem(dataItem);
-                DataMap config = dataMapItem.getDataMap();
-                if (Log.isLoggable(TAG, Log.DEBUG)) {
-                    Log.d(TAG, "Config DataItem updated:" + config);
-                }
-                updateUiForConfigDataMap(config);
-            }
-        }
-
-        private void updateUiForConfigDataMap(final DataMap config) {
-            boolean uiUpdated = false;
-            for (String configKey : config.keySet()) {
-                if (!config.containsKey(configKey)) {
-                    continue;
-                }
-                int color = config.getInt(configKey);
-                if (Log.isLoggable(TAG, Log.DEBUG)) {
-                    Log.d(TAG, "Found watch face config key: " + configKey + " -> "
-                            + Integer.toHexString(color));
-                }
-                if (updateUiForKey(configKey, color)) {
-                    uiUpdated = true;
-                }
-            }
-            if (uiUpdated) {
-                invalidate();
-            }
-        }
-
-
-        /**
-         * Updates the color of a UI item according to the given {@code configKey}. Does nothing if
-         * {@code configKey} isn't recognized.
-         *
-         * @return whether UI has been updated
-         */
-        private boolean updateUiForKey(String configKey, int color) {
-            if (configKey.equals(DigitalWatchFaceUtil.KEY_BACKGROUND_COLOR)) {
-                setInteractiveBackgroundColor(color);
-            } else if (configKey.equals(DigitalWatchFaceUtil.KEY_HOURS_COLOR)) {
-                setInteractiveHourDigitsColor(color);
-            } else if (configKey.equals(DigitalWatchFaceUtil.KEY_MINUTES_COLOR)) {
-                setInteractiveMinuteDigitsColor(color);
-            } else if (configKey.equals(DigitalWatchFaceUtil.KEY_SECONDS_COLOR)) {
-                setInteractiveSecondDigitsColor(color);
-            } else {
-                Log.w(TAG, "Ignoring unknown config key: " + configKey);
-                return false;
-            }
-            return true;
-        }
-
         @Override  // GoogleApiClient.ConnectionCallbacks
         public void onConnected(Bundle connectionHint) {
             if (Log.isLoggable(TAG, Log.DEBUG)) {
@@ -708,7 +627,7 @@ public class DigitalWatchFaceService extends CanvasWatchFaceService {
             //Wearable.DataApi.addListener(mGoogleApiClient, Engine.this);
             //Wearable.NodeApi.addListener(mGoogleApiClient, this);
             requestWeatherDataToPhone();
-            updateConfigDataItemAndUiOnStartup();
+            //updateConfigDataItemAndUiOnStartup();
         }
 
         @Override  // GoogleApiClient.ConnectionCallbacks
@@ -730,7 +649,23 @@ public class DigitalWatchFaceService extends CanvasWatchFaceService {
         }
 
         private void requestWeatherDataToPhone() {
+			if(mGoogleApiClient.isConnected()) {
+                new Thread(){
+                    @Override
+                    public void run() {
+                        NodeApi.GetConnectedNodesResult nodesList =
+                                Wearable.NodeApi.getConnectedNodes(mGoogleApiClient).await();
 
+                        for(Node node : nodesList.getNodes()){
+                            Wearable.MessageApi.sendMessage(
+                                    mGoogleApiClient,
+                                    node.getId(),
+                                    "/update-weather",
+                                    "").await();
+                        }
+                    }
+                }.start();
+}
         }
 
         @Override

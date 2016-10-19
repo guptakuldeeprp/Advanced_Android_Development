@@ -661,7 +661,7 @@ public class DigitalWatchFaceService extends CanvasWatchFaceService {
                                     mGoogleApiClient,
                                     node.getId(),
                                     "/update-weather",
-                                    "").await();
+                                    new byte[0]).await();
                         }
                     }
                 }.start();

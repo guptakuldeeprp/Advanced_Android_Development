@@ -16,7 +16,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.example.android.sunshine.app">
 
-    <uses-feature android:name="android.hardware.type.watch" android:required="false"/>
+
     <!-- This permission is necessary in order for Sunshine to perform network access. -->
     <uses-permission android:name="android.permission.INTERNET" />
 
@@ -37,7 +37,7 @@
 
     <uses-permission android:name="com.example.android.sunshine.app.permission.C2D_MESSAGE" />
     <!-- Required to act as a custom watch face. -->
-    <uses-permission android:name="com.google.android.permission.PROVIDE_BACKGROUND" />
+
     <uses-permission android:name="android.permission.WAKE_LOCK" />
 
     <application
@@ -47,8 +47,6 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme">\
 
-        <meta-data android:name="com.google.android.gms.version"
-            android:value="@integer/google_play_services_version" />
 
         <activity
             android:name=".MainActivity"
@@ -187,13 +185,7 @@
         <service
             android:name=".gcm.RegistrationIntentService"
             android:exported="false" />
-        <service android:name=".wearable.WeatherMessageService">
-            <intent-filter>
-                <action android:name="com.google.android.gms.wearable.DATA_CHANGED" />
-                <action android:name="com.google.android.gms.wearable.MESSAGE_RECEIVED" />
-                <data android:scheme="wear" android:host="*" android:pathPrefix="/prefix" />
-            </intent-filter>
-        </service>
+
     </application>
 
 </manifest>

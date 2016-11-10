@@ -502,7 +502,7 @@ public class DigitalWatchFaceService extends CanvasWatchFaceService {
             // Draw the hours.
             float x = mXOffset;
             float y = mYOffset;
-            float xTemperature = bounds.width()/2f;
+            float xTemperature = bounds.width()/2f - 40;
             String hourString;
             if (is24Hour) {
                 hourString = formatTwoDigitNumber(mCalendar.get(Calendar.HOUR_OF_DAY));

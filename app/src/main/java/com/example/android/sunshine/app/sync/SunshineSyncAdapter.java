@@ -108,6 +108,8 @@ public class SunshineSyncAdapter extends AbstractThreadedSyncAdapter implements 
                 .addOnConnectionFailedListener(this)
                 .addApi(Wearable.API)
                 .build();
+
+        mGoogleApiClient.connect();
     }
 
     /**
@@ -400,7 +402,7 @@ public class SunshineSyncAdapter extends AbstractThreadedSyncAdapter implements 
                     // prevent sending message to wearables if nothing has changed
                     //if(!newMessageString.equals(oldMessageString)) {
                     //  oldMessageString = newMessageString;
-                    new WearableMessageSender(getContext().getString(R.string.weather_msg_path), newMessageString).start();
+                    new WearableMessageSender(newMessageString, getContext().getString(R.string.weather_msg_path)).start();
                     //}
                 }
 

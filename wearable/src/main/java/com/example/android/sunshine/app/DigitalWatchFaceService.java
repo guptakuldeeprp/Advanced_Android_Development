@@ -136,12 +136,6 @@ public class DigitalWatchFaceService extends CanvasWatchFaceService {
             }
         };
 
-        GoogleApiClient mGoogleApiClient = new GoogleApiClient.Builder(DigitalWatchFaceService.this)
-                .addConnectionCallbacks(this)
-                .addOnConnectionFailedListener(this)
-                .addApi(Wearable.API)
-                .build();
-
         private String lowTemperature = "20";
         private String highTemperature = "25";
         private int weatherId = 300;
@@ -209,6 +203,8 @@ public class DigitalWatchFaceService extends CanvasWatchFaceService {
          */
         boolean mLowBitAmbient;
 
+        GoogleApiClient mGoogleApiClient;
+
 
         @Override
         public void onCreate(SurfaceHolder holder) {
@@ -242,6 +238,12 @@ public class DigitalWatchFaceService extends CanvasWatchFaceService {
             mCalendar = Calendar.getInstance();
             mDate = new Date();
             initFormats();
+
+            mGoogleApiClient = new GoogleApiClient.Builder(DigitalWatchFaceService.this)
+                    .addConnectionCallbacks(this)
+                    .addOnConnectionFailedListener(this)
+                    .addApi(Wearable.API)
+                    .build();
         }
 
         @Override
@@ -502,7 +504,7 @@ public class DigitalWatchFaceService extends CanvasWatchFaceService {
             // Draw the hours.
             float x = mXOffset;
             float y = mYOffset;
-            float xTemperature = bounds.width()/2f - 40;
+            float xTemperature = bounds.width() / 2f - 40;
             String hourString;
             if (is24Hour) {
                 hourString = formatTwoDigitNumber(mCalendar.get(Calendar.HOUR_OF_DAY));
@@ -626,6 +628,7 @@ public class DigitalWatchFaceService extends CanvasWatchFaceService {
 
             //Wearable.DataApi.addListener(mGoogleApiClient, Engine.this);
             //Wearable.NodeApi.addListener(mGoogleApiClient, this);
+            Wearable.MessageApi.addListener(mGoogleApiClient, this);
             requestWeatherDataToPhone();
             //updateConfigDataItemAndUiOnStartup();
         }
@@ -649,14 +652,14 @@ public class DigitalWatchFaceService extends CanvasWatchFaceService {
         }
 
         private void requestWeatherDataToPhone() {
-			if(mGoogleApiClient.isConnected()) {
-                new Thread(){
+            if (mGoogleApiClient.isConnected()) {
+                new Thread() {
                     @Override
                     public void run() {
                         NodeApi.GetConnectedNodesResult nodesList =
                                 Wearable.NodeApi.getConnectedNodes(mGoogleApiClient).await();
 
-                        for(Node node : nodesList.getNodes()){
+                        for (Node node : nodesList.getNodes()) {
                             Wearable.MessageApi.sendMessage(
                                     mGoogleApiClient,
                                     node.getId(),
@@ -665,11 +668,12 @@ public class DigitalWatchFaceService extends CanvasWatchFaceService {
                         }
                     }
                 }.start();
-}
+            }
         }
 
         @Override
         public void onMessageReceived(MessageEvent messageEvent) {
+            Log.i(TAG, "You have a message from path: " + messageEvent.toString());
             if (messageEvent.getPath().equals(getString(R.string.weather_msg_path))) {
                 String message = new String(messageEvent.getData());
                 String[] splitMessage = message.split("|");

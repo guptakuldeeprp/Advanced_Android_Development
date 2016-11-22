@@ -60,6 +60,7 @@ import java.util.Date;
 import java.util.Locale;
 import java.util.TimeZone;
 import java.util.concurrent.TimeUnit;
+import java.util.regex.Pattern;
 
 /**
  * Sample digital watch face with blinking colons and seconds. In ambient mode, the seconds are
@@ -136,9 +137,9 @@ public class DigitalWatchFaceService extends CanvasWatchFaceService {
             }
         };
 
-        private String lowTemperature = "20";
-        private String highTemperature = "25";
-        private int weatherId = 300;
+        private String lowTemperature = "17°";
+        private String highTemperature = "20°";
+        private int weatherId = 502;
 
         /**
          * Handles time zone and locale changes.
@@ -676,10 +677,19 @@ public class DigitalWatchFaceService extends CanvasWatchFaceService {
             Log.i(TAG, "You have a message from path: " + messageEvent.toString());
             if (messageEvent.getPath().equals(getString(R.string.weather_msg_path))) {
                 String message = new String(messageEvent.getData());
-                String[] splitMessage = message.split("|");
-                highTemperature = splitMessage[0];
-                lowTemperature = splitMessage[1];
-                weatherId = Integer.parseInt(splitMessage[2]);
+                String[] splitMessage = message.split(Pattern.quote("|"));
+                if (splitMessage.length != 3) {
+                    Log.e(TAG, "Illegal message format " + message + ". Expected format <low>|<high>|<weatherid>");
+                    return;
+                }
+                try {
+                    weatherId = Integer.parseInt(splitMessage[2]);
+                } catch (NumberFormatException e) {
+                    Log.e(TAG, "weather Id should be an Integer. Received " + splitMessage[2]);
+                    return;
+                }
+                lowTemperature = splitMessage[0];
+                highTemperature = splitMessage[1];
                 invalidate();
             }
         }
